@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tournoi Blackball</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#141a26; --panel2:#1b2333; --line:#2a3450;
+    --txt:#e8ecf4; --dim:#8b94a8; --neon:#39ff88; --neon2:#2f7bff;
+    --warn:#ffb347; --bad:#ff5c6c;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  body{margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg); color:var(--txt); min-height:100vh}
+  header{position:sticky; top:0; z-index:10; display:flex; align-items:center; gap:10px;
+    padding:12px 16px; background:rgba(11,14,20,.92); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line)}
+  header h1{font-size:18px; margin:0; letter-spacing:.5px}
+  header h1 b{color:var(--neon)}
+  header .spacer{flex:1}
+  .btn{appearance:none; border:1px solid var(--line); background:var(--panel2); color:var(--txt);
+    border-radius:10px; padding:10px 14px; font-size:14px; font-weight:600; cursor:pointer}
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:var(--neon); border-color:var(--neon); color:#06120b}
+  .btn.ghost{background:transparent}
+  .btn.small{padding:6px 10px; font-size:12px; border-radius:8px}
+  .btn.danger{border-color:var(--bad); color:var(--bad)}
+  .btn:disabled{opacity:.4; cursor:default; transform:none}
+  main{max-width:860px; margin:0 auto; padding:16px}
+  h2{font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--dim);
+    margin:22px 0 10px}
+  h2 .h2-note{font-weight:400; text-transform:none; letter-spacing:0; font-size:12px;
+    color:var(--txt); float:right}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px}
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+  .chip{border:1px solid var(--line); background:var(--panel2); color:var(--txt);
+    border-radius:999px; padding:9px 16px; font-size:14px; font-weight:600; cursor:pointer}
+  .chip.on{background:var(--neon); border-color:var(--neon); color:#06120b}
+  .field{margin-bottom:14px}
+  .field label{display:block; font-size:12px; color:var(--dim); margin-bottom:6px;
+    text-transform:uppercase; letter-spacing:.8px}
+  input[type=text],input[type=number]{width:100%; background:var(--panel2); border:1px solid var(--line);
+    color:var(--txt); border-radius:10px; padding:11px 12px; font-size:15px}
+  input:focus{outline:none; border-color:var(--neon)}
+  .names-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  .racetos{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px}
+  .racetos .field{margin:0}
+  /* Tables */
+  #tablesRow{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px}
+  .table-card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px}
+  .table-card .tname{font-size:12px; color:var(--dim); text-transform:uppercase; letter-spacing:1px}
+  .table-card .tstate{font-size:12px; margin-top:2px}
+  .table-card.live{border-color:var(--neon)}
+  .table-card .tstate.live{color:var(--neon)}
+  .match-row{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:10px;
+    background:var(--panel2); margin-top:8px}
+  .match-row .pname{flex:1; font-weight:600; font-size:14px; min-width:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .match-row .pname.right{text-align:right}
+  .match-row .pname.winner{color:var(--neon)}
+  .match-row .score{font-weight:800; font-size:16px; min-width:44px; text-align:center;
+    letter-spacing:1px}
+  .match-row .phase-tag{font-size:10px; color:var(--dim); text-transform:uppercase}
+  .match-row.pending{opacity:.75}
+  .match-row.clickable{cursor:pointer}
+  .tcount{font-size:26px; font-weight:800; text-align:center; letter-spacing:2px;
+    margin-top:10px; color:var(--txt); font-variant-numeric:tabular-nums}
+  .tcount.warn{color:var(--warn)}
+  .tcount.out{color:var(--bad)}
+  .tcount.prep{color:var(--neon)}
+  .tcontrols{display:flex; gap:8px; margin-top:8px}
+  .tcontrols .btn{flex:1}
+  .check{display:flex; align-items:center; gap:8px; font-size:14px; color:var(--txt);
+    padding:6px 0; text-transform:none; letter-spacing:0}
+  .check input{width:18px; height:18px; accent-color:var(--neon)}
+  .next-up{font-size:12px; color:var(--dim); margin-top:8px}
+  .next-up b{color:var(--txt)}
+  /* Groupes */
+  #groupsWrap{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px}
+  table.standings{width:100%; border-collapse:collapse; font-size:13px; margin-top:8px}
+  table.standings th{font-size:10px; color:var(--dim); text-transform:uppercase; text-align:left;
+    padding:4px 6px; border-bottom:1px solid var(--line)}
+  table.standings td{padding:6px; border-bottom:1px solid rgba(42,52,80,.5)}
+  table.standings tr.qualified td{color:var(--neon)}
+  .mlist{display:flex; flex-direction:column; gap:6px; margin-top:8px}
+  .badge{font-size:10px; padding:2px 8px; border-radius:999px; border:1px solid var(--line);
+    color:var(--dim); text-transform:uppercase; letter-spacing:.5px; white-space:nowrap}
+  .badge.live{color:var(--neon); border-color:var(--neon)}
+  .badge.done{color:var(--dim)}
+  /* Bracket */
+  .bracket-phase{margin-bottom:16px}
+  .bracket-phase h3{font-size:12px; color:var(--neon2); text-transform:uppercase;
+    letter-spacing:1px; margin:0 0 8px}
+  /* Arbre visuel (tableau miroir type bracket) */
+  .ko-scroll{overflow-x:auto; margin:0 -16px; padding:0 16px 10px;
+    -webkit-overflow-scrolling:touch}
+  .ko-stage{position:relative; min-width:100%}
+  .ko-lines{position:absolute; left:0; top:0}
+  .ko-lines path{fill:none; stroke:var(--line); stroke-width:2}
+  .ko-round{position:absolute; top:0; width:130px; text-align:center; font-size:10px;
+    color:var(--dim); text-transform:uppercase; letter-spacing:1px}
+  .ko-box{position:absolute; width:130px; background:var(--panel2);
+    border:1px solid var(--line); border-radius:8px; overflow:hidden; font-size:12px}
+  .ko-box.playing{border-color:var(--neon); box-shadow:0 0 8px rgba(57,255,136,.25)}
+  .ko-box.pending{opacity:.8}
+  .ko-box[data-score]{cursor:pointer}
+  .ko-box .kr{display:flex; align-items:center; gap:4px; padding:0 8px;
+    min-height:19px; line-height:19px}
+  .ko-box .kr + .kr{border-top:1px solid var(--line)}
+  .ko-box .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; font-weight:600}
+  .ko-box .nm.dim{color:var(--dim); font-weight:400; font-style:italic}
+  .ko-box .sc{font-weight:800; min-width:14px; text-align:right}
+  .ko-box .kr.win .nm, .ko-box .kr.win .sc{color:var(--neon)}
+  .ko-chip{position:absolute; width:130px; height:28px; line-height:26px; padding:0 8px;
+    background:var(--panel); border:1px dashed var(--line); border-radius:8px;
+    font-size:11px; color:var(--dim); overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap}
+  /* Modal score */
+  .overlay{position:fixed; inset:0; background:rgba(0,0,0,.65); display:none; z-index:50;
+    align-items:flex-end; justify-content:center}
+  .overlay.open{display:flex}
+  .sheet{background:var(--panel); border:1px solid var(--line); border-radius:18px 18px 0 0;
+    width:100%; max-width:480px; padding:18px; padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  .sheet h3{margin:0 0 4px; font-size:16px}
+  .sheet .sub{font-size:12px; color:var(--dim); margin-bottom:14px}
+  .score-row{display:flex; align-items:center; gap:12px; margin-bottom:10px}
+  .score-row .pname{flex:1; font-weight:700; font-size:16px; min-width:0}
+  .score-row .pname.right{text-align:right}
+  .sc-btn{width:52px; height:52px; border-radius:12px; border:1px solid var(--line);
+    background:var(--panel2); color:var(--txt); font-size:24px; font-weight:700; cursor:pointer}
+  .sc-btn:active{transform:scale(.95)}
+  .big-score{font-size:34px; font-weight:800; min-width:56px; text-align:center}
+  .sheet .actions{display:flex; gap:8px; margin-top:16px}
+  .sheet .actions .btn{flex:1; padding:13px}
+  /* Toast */
+  #toast{position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(80px);
+    background:var(--panel2); border:1px solid var(--line); color:var(--txt);
+    padding:10px 18px; border-radius:999px; font-size:13px; z-index:99; opacity:0;
+    transition:transform .25s, opacity .25s; pointer-events:none; white-space:nowrap}
+  #toast.show{transform:translateX(-50%) translateY(0); opacity:1}
+  /* Archives : liste sur le setup + consultation en lecture seule */
+  .archive-row{display:flex; align-items:center; gap:8px; padding:9px 0;
+    border-top:1px solid var(--line)}
+  .archive-row:first-child{border-top:none; padding-top:2px}
+  .archive-info{flex:1; min-width:0}
+  .archive-meta{font-size:12px; color:var(--dim); margin-top:2px}
+  .archive-btns{display:flex; gap:6px}
+  .archive-phase{font-size:11px; font-weight:700; letter-spacing:1px; color:var(--neon);
+    text-transform:uppercase; margin:12px 0 4px}
+  /* Pied de page : tuto, formats, crédit */
+  .foot{margin-top:28px; padding-top:14px; border-top:1px solid var(--line);
+    font-size:13px; color:var(--dim)}
+  .foot details{margin-bottom:8px}
+  .foot summary{cursor:pointer; font-weight:600; color:var(--txt); font-size:13px}
+  .foot .foot-body{padding:8px 0 4px; line-height:1.5}
+  .foot ol{margin:0; padding-left:18px}
+  .foot li{margin-bottom:4px}
+  .foot .fmt-title{color:var(--neon); font-weight:700}
+  .foot .credit{margin-top:14px; text-align:center; font-size:12px; letter-spacing:.5px}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Tournoi <b>Blackball</b></h1>
+  <div class="spacer"></div>
+  <button id="btnReset" class="btn small danger hidden">Nouveau tournoi</button>
+</header>
+
+<main>
+
+  <!-- ============ ÉCRAN DE SETUP ============ -->
+  <section id="screenSetup">
+    <div class="card">
+      <div class="field">
+        <label>Format du tournoi</label>
+        <div class="chips" id="chipsFormat">
+          <button class="chip on" data-f="elim">Élimination + consolante</button>
+          <button class="chip" data-f="poules">Poules + phase finale</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Nombre de joueurs</label>
+        <div class="chips" id="chipsPlayers">
+          <button class="chip" data-n="6">6</button>
+          <button class="chip on" data-n="8">8</button>
+          <button class="chip" data-n="10">10</button>
+          <button class="chip" data-n="12">12</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Matchs en parallèle (tables)</label>
+        <div class="chips" id="chipsTables">
+          <button class="chip on" data-n="2">2</button>
+          <button class="chip" data-n="3">3</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Parties gagnantes (race to) par phase</label>
+        <div class="racetos" id="racetos"></div>
+      </div>
+      <div class="field" id="tournoiOpts">
+        <label>Options</label>
+        <div id="elimOpts">
+          <label class="check"><input type="checkbox" id="optConso" checked>
+            Consolante pour les perdants du 1er tour</label>
+          <label class="check"><input type="checkbox" id="optPetite">
+            Petite finale (match pour la 3e place)</label>
+        </div>
+        <label class="check"><input type="checkbox" id="optTimer" checked>
+          Chrono automatique — mise en place puis RT × min/manche
+          <span style="font-size:12px;color:var(--dim)">un seul compte à rebours par match, pour les deux joueurs ensemble</span></label>
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <div class="field" style="flex:1;margin:0">
+            <label>Min par manche</label>
+            <input type="number" id="optMinManche" min="1" max="60" value="10">
+          </div>
+          <div class="field" style="flex:1;margin:0">
+            <label>Mise en place (min)</label>
+            <input type="number" id="optPrepMin" min="0" max="30" value="5">
+          </div>
+        </div>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <div id="formatDesc" style="font-size:13px;color:var(--dim)"></div>
+      </div>
+    </div>
+
+    <h2>Joueurs</h2>
+    <div class="card">
+      <div class="names-grid" id="namesGrid"></div>
+      <datalist id="knownNames"></datalist>
+    </div>
+
+    <button id="btnStart" class="btn primary" style="width:100%; margin-top:16px; padding:14px; font-size:16px">
+      Lancer le tournoi
+    </button>
+
+    <div class="card" style="margin-top:14px" id="liveSetupCard">
+      <div class="field" style="margin:0">
+        <label>Rejoindre un tournoi en direct (code live)</label>
+        <div style="display:flex; gap:8px">
+          <input type="text" id="joinCode" placeholder="Code du tournoi"
+                 style="text-transform:uppercase" maxlength="8">
+          <button class="btn" id="btnJoin">Rejoindre</button>
+        </div>
+        <div id="liveSetupNote" style="font-size:12px; color:var(--dim); margin-top:6px"></div>
+      </div>
+    </div>
+
+    <div class="card hidden" style="margin-top:14px" id="archivesCard">
+      <div class="field" style="margin:0">
+        <label>Tournois archivés</label>
+        <div id="archivesList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ÉCRAN TOURNOI ============ -->
+  <section id="screenTournament" class="hidden">
+    <div id="endBanner" class="card hidden"
+         style="text-align:center; border-color:var(--neon); margin-bottom:14px">
+      <div id="endBannerTxt" style="font-weight:800; font-size:16px"></div>
+      <div style="font-size:12px; color:var(--dim); margin:6px 0 10px">
+        Le tournoi est terminé — archive-le pour libérer l'écran et fermer le live.</div>
+      <button class="btn primary" id="btnCloture">Clôturer et archiver</button>
+    </div>
+    <h2>Matchs en cours <span id="progressInfo" class="h2-note"></span></h2>
+    <div id="tablesRow"></div>
+
+    <h2 id="groupsTitle">Poules</h2>
+    <div id="groupsWrap"></div>
+
+    <h2 id="bracketTitle" class="hidden">Phase finale</h2>
+    <div id="bracketWrap"></div>
+
+    <div style="display:flex; gap:8px; margin-top:20px; flex-wrap:wrap">
+      <button class="btn ghost small" id="btnExport">Exporter (JSON)</button>
+      <button class="btn ghost small" id="btnImport">Importer</button>
+      <button class="btn ghost small" id="btnShare">Partager en live</button>
+      <button class="btn ghost small hidden" id="btnStopLive">Arrêter le live</button>
+      <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+    </div>
+    <div id="liveBadge" class="hidden" style="margin-top:12px; font-size:14px"></div>
+
+    <div id="koTreeSec" class="hidden"></div>
+  </section>
+
+  <!-- ============ PIED DE PAGE ============ -->
+  <footer class="foot">
+    <details>
+      <summary>Comment ça marche ?</summary>
+      <div class="foot-body">
+        <ol>
+          <li>Un joueur crée le tournoi sur son téléphone, puis
+            <b>Partager en live</b> → <b>Copier le lien</b> et l'envoie aux autres
+            (WhatsApp, SMS…).</li>
+          <li>Chacun ouvre le lien sur son téléphone : le tableau s'affiche
+            directement, synchronisé chez tout le monde.</li>
+          <li>Pour jouer un match : <b>Lancer</b> → chrono « mise en place »
+            puis « jeu » (RT × min/manche) → on joue dans la durée.</li>
+          <li>À la fin : <b>Saisir le score</b> → vainqueur + manches. Le tableau
+            et les matchs suivants se mettent à jour partout.</li>
+        </ol>
+        <div style="margin-top:6px">Le tournoi est sauvegardé automatiquement et
+          peut se jouer sur plusieurs jours — chacun se reconnecte en rouvrant
+          le lien. « Exporter » permet aussi de sauvegarder l'état en fichier.
+          Quand la finale est jouée, « <b>Clôturer et archiver</b> » range le
+          tournoi dans les archives (consultables sur l'écran de création) et
+          ferme le live.</div>
+      </div>
+    </details>
+    <details>
+      <summary>Les formats</summary>
+      <div class="foot-body">
+        <div><span class="fmt-title">Élimination + consolante</span> — tableau à
+          élimination directe : qui perd sort du tableau principal. Avec la
+          <b>consolante</b>, les perdants du 1<sup>er</sup> tour sont repêchés
+          dans un second tableau — personne ne repart après un seul match.
+          La <b>petite finale</b> (option) départage les perdants des demies
+          pour la 3<sup>e</sup> place.</div>
+        <div style="margin-top:8px"><span class="fmt-title">Poules + phase
+          finale</span> — les joueurs sont répartis en poules et se rencontrent
+          tous entre eux ; les premiers de chaque poule sont qualifiés pour la
+          phase finale, jouée en élimination directe.</div>
+      </div>
+    </details>
+    <div class="credit">© ASCBG Blackball — Nantes</div>
+  </footer>
+
+</main>
+
+<!-- ============ MODAL SCORE ============ -->
+<div class="overlay" id="scoreOverlay">
+  <div class="sheet">
+    <h3 id="scoreTitle">Score</h3>
+    <div class="sub" id="scoreSub"></div>
+    <div class="score-row">
+      <button class="sc-btn" id="scMinus1">−</button>
+      <div class="pname" id="scName1"></div>
+      <div class="big-score" id="scVal1">0</div>
+      <button class="sc-btn" id="scPlus1">+</button>
+    </div>
+    <div class="score-row">
+      <button class="sc-btn" id="scMinus2">−</button>
+      <div class="pname right" id="scName2"></div>
+      <div class="big-score" id="scVal2">0</div>
+      <button class="sc-btn" id="scPlus2">+</button>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="scCancel">Annuler</button>
+      <button class="btn primary" id="scConfirm">Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- Consultation d'un tournoi archivé (lecture seule) -->
+<div class="overlay" id="archiveOverlay">
+  <div class="sheet">
+    <h3 id="archiveTitle"></h3>
+    <div class="sub" id="archiveSub"></div>
+    <div id="archiveBody" style="max-height:55vh; overflow-y:auto; text-align:left"></div>
+    <div class="actions">
+      <button class="btn ghost" id="archClose">Fermer</button>
+      <button class="btn primary" id="archExport">Exporter (JSON)</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Firebase (suivi live multi-appareils). Sans config renseignée,
+     la page fonctionne normalement en mode local. -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+
+<script>
+'use strict';
+
+/* ================= Firebase / suivi live ================= */
+/* Pour activer le live :
+   1. console.firebase.google.com → créer un projet
+   2. Build → Realtime Database → "Créer" (région europe-west1 de préférence)
+   3. Règles (mode test pour commencer) :
+        { "rules": { "tournois": { "$code": { ".read": true, ".write": true } } } }
+   4. Coller la config web du projet ci-dessous (Paramètres du projet → Vos apps) */
+var FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyDIMP3q0xbkROiqDYCMf47lJ35-CIf29-M',
+  databaseURL: 'https://symbioz-tournois-bdfe7-default-rtdb.firebaseio.com'
+};
+var firebaseReady = false;
+if (FIREBASE_CONFIG.apiKey && typeof firebase !== 'undefined') {
+  try { firebase.initializeApp(FIREBASE_CONFIG); firebaseReady = true; } catch (e) {}
+}
+
+// Rôle live de CET appareil (non partagé — chaque device a le sien)
+var LIVE_KEY = 'bbct_tournoi_live';
+var liveRole = null;   // 'host' | 'viewer' | null
+var liveCode = null;
+var liveRef = null;
+
+function genLiveCode() {
+  var chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // sans I, L, O, 0, 1
+  var c = '';
+  for (var i = 0; i < 8; i++) c += chars[Math.floor(Math.random() * chars.length)];
+  return c;
+}
+function saveLiveMeta() {
+  try {
+    localStorage.setItem(LIVE_KEY, JSON.stringify({ role: liveRole, code: liveCode }));
+  } catch (e) {}
+}
+function loadLiveMeta() {
+  try { return JSON.parse(localStorage.getItem(LIVE_KEY)); } catch (e) { return null; }
+}
+
+// Toute session live (hôte ou participant) pousse l'état complet à chaque
+// saveState() — les autres appareils reçoivent le snapshot et re-rendent.
+// L'état est sérialisé en chaîne JSON : Firebase supprime les champs null
+// d'un objet brut (matchId, s1/s2, group, firstRound…), ce qui corrompait
+// l'état reçu en retour (emplacements vus occupés, scores "undefined").
+function pushLive() {
+  if (!liveRole || !liveRef || !state) return;
+  liveRef.set({ v: 1, state: JSON.stringify(state) })
+    .catch(function () { toast('Envoi live impossible — vérifie la connexion'); });
+}
+
+function startHosting() {
+  if (!firebaseReady || !state) return;
+  liveRole = 'host';
+  liveCode = genLiveCode();
+  liveRef = firebase.database().ref('tournois/' + liveCode);
+  liveSynced = false;
+  saveLiveMeta();
+  bindViewerListener(); // l'hôte écoute aussi — les participants écrivent
+  pushLive();
+  renderLiveUI();
+  toast('Live activé — code ' + liveCode);
+}
+
+// vrai après le 1er snapshot non vide reçu — distingue "code inconnu /
+// live jamais rempli" (null initial) de "live terminé" (données puis null)
+var liveSynced = false;
+
+// Listener live (hôte et participants) : chaque snapshot remplace l'état
+// local et re-rend
+function bindViewerListener() {
+  if (!liveRef) return;
+  liveRef.on('value', function (snap) {
+    var v = snap.val();
+    if (!v || !v.state) {
+      if (liveSynced || liveRole === 'viewer') {
+        toast(liveSynced
+          ? 'Live terminé — copie locale conservée'
+          : 'Live indisponible ou code inconnu — copie locale conservée');
+        stopLive();
+      }
+      return; // hôte : null initial avant le 1er push — ignoré
+    }
+    liveSynced = true;
+    var incoming;
+    try {
+      incoming = typeof v.state === 'string' ? JSON.parse(v.state) : v.state;
+    } catch (e) { return; } // état illisible → snapshot ignoré
+    if (!incoming || !incoming.players || !incoming.matches) return;
+    state = incoming;
+    if (state.nextId === undefined) state.nextId = state.matches.length;
+    if (!state.tables) state.tables = [];
+    saveState(true); // copie locale du snapshot — sans repousser (boucle)
+    render();
+  }, function () {
+    // erreur de lecture (droits/réseau) : on détache sans détruire l'état
+    toast('Live injoignable — copie locale conservée');
+    stopLive();
+  });
+}
+
+function joinViewer(code) {
+  if (!firebaseReady) return;
+  code = String(code || '').trim().toUpperCase();
+  if (!code) return;
+  if (state && !confirm('Rejoindre un live remplace le tournoi local en cours. Continuer ?')) return;
+  if (liveRef) liveRef.off(); // détache une éventuelle session live précédente
+  liveSynced = false;
+  liveRole = 'viewer';
+  liveCode = code;
+  liveRef = firebase.database().ref('tournois/' + code);
+  saveLiveMeta();
+  bindViewerListener();
+  toast('Connexion au tournoi ' + code + '…');
+}
+
+function stopLive() {
+  var wasHost = liveRole === 'host';
+  if (liveRef) {
+    liveRef.off();
+    // l'hôte supprime le nœud → les participants voient "live terminé"
+    if (wasHost) liveRef.remove().catch(function () {});
+  }
+  liveRef = null; liveRole = null; liveCode = null;
+  try { localStorage.removeItem(LIVE_KEY); } catch (e) {}
+  // Quitter ou perdre le live ne détruit JAMAIS le tournoi : l'état courant
+  // (local ou dernière copie synchronisée) redevient un tournoi local.
+  render();
+}
+
+/* ================= État & persistance ================= */
+
+var STORE_KEY = 'bbct_tournoi';
+var NAMES_KEY = 'bbct_tournoi_names';
+
+// Ordre des phases (croissant = avancée du tournoi).
+// Les matchs de consolante s'intercalent au même niveau que la phase du tableau
+// en cours : les tables se remplissent indifféremment des deux tableaux.
+var PHASE_ORDER = { poule: 0, barrage: 1, quart: 2, demi: 3, cdemi: 3, finale: 4, petite: 4, cfinale: 4 };
+var PHASE_LABEL = {
+  poule: 'Poule', barrage: 'Barrage', quart: 'Quart de finale', demi: 'Demi-finale',
+  finale: 'Finale', petite: 'Petite finale', cdemi: 'Demi consolante', cfinale: 'Finale consolante'
+};
+
+var state = null;          // état du tournoi en cours (persisté)
+var setupCfg = { format: 'elim', players: 8, tables: 2 }; // choix de l'écran de setup
+
+function saveState(skipPush) {
+  if (state) state.savedAt = Date.now();
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+  // hôte et participants écrivent tous dans le même nœud (auto-arbitrage :
+  // chacun gère ses matchs depuis son téléphone). Dernier écrivain gagne.
+  if (liveRole && !skipPush) pushLive();
+}
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)); } catch (e) { return null; }
+}
+function knownNames() {
+  try { return JSON.parse(localStorage.getItem(NAMES_KEY)) || []; } catch (e) { return []; }
+}
+function rememberNames(names) {
+  var known = knownNames();
+  names.forEach(function (n) {
+    if (n && known.indexOf(n) < 0) known.push(n);
+  });
+  try { localStorage.setItem(NAMES_KEY, JSON.stringify(known.slice(-100))); } catch (e) {}
+}
+
+/* ---------- Archives : tournois terminés conservés localement ---------- */
+
+var ARCHIVE_KEY = 'bbct_tournoi_archive';
+function loadArchives() {
+  try { return JSON.parse(localStorage.getItem(ARCHIVE_KEY)) || []; } catch (e) { return []; }
+}
+function saveArchives(list) {
+  // on garde les 10 dernières — un tournoi complet tient en quelques Ko
+  try { localStorage.setItem(ARCHIVE_KEY, JSON.stringify(list.slice(0, 10))); } catch (e) {}
+}
+// Archive l'état courant : résumé (vainqueur, podium…) + état complet pour
+// consultation et réexport JSON
+function archiveState() {
+  var f = phaseMatches('finale');
+  var rec = {
+    id: Date.now(),
+    endedAt: new Date().toISOString(),
+    format: state.config.format,
+    players: state.players.map(function (p) { return p.name; }),
+    winner: f.length ? playerName(winnerOf(f[0])) : null,
+    runnerUp: f.length ? playerName(loserOf(f[0])) : null,
+    third: null, consoWinner: null,
+    state: state
+  };
+  var pf = phaseMatches('petite');
+  if (pf.length && pf[0].status === 'done') rec.third = playerName(winnerOf(pf[0]));
+  var cf = phaseMatches('cfinale');
+  if (cf.length && cf[0].status === 'done') rec.consoWinner = playerName(winnerOf(cf[0]));
+  var archives = loadArchives();
+  archives.unshift(rec);
+  saveArchives(archives);
+}
+
+// La finale est jouée → le tournoi est terminé (petite finale/consolante
+// éventuellement encore en attente sont archivées telles quelles)
+function finaleDone() {
+  var f = phaseMatches('finale');
+  return f.length > 0 && f[0].status === 'done';
+}
+
+function cloturerTournoi() {
+  if (!state || !finaleDone()) return;
+  var msg = liveRole === 'host'
+    ? 'Clôturer et archiver ce tournoi ? Le live sera arrêté pour tout le monde.'
+    : 'Clôturer et archiver ce tournoi ?';
+  if (!confirm(msg)) return;
+  archiveState();
+  // hôte → supprime le nœud live (les participants gardent leur copie) ;
+  // participant → se détache, le live continue pour les autres
+  if (liveRef) stopLive();
+  state = null;
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  render();
+  toast('Tournoi archivé');
+}
+
+/* ================= Utilitaires ================= */
+
+function el(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+var toastTimer = null;
+function toast(msg) {
+  var t = el('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2200);
+}
+function playerName(id) {
+  var p = state.players.find(function (x) { return x.id === id; });
+  return p ? p.name : '?';
+}
+
+/* ================= Structure du tournoi ================= */
+
+// Phases présentes selon le nombre de joueurs
+function phasesFor(nPlayers) {
+  if (nPlayers === 6) return ['poule', 'finale'];
+  if (nPlayers === 12) return ['poule', 'quart', 'demi', 'finale'];
+  return ['poule', 'demi', 'finale']; // 8 et 10
+}
+
+// Répartition en poules selon le nombre de joueurs
+function groupSizes(nPlayers) {
+  if (nPlayers === 6) return [6];
+  if (nPlayers === 12) return [3, 3, 3, 3];
+  return nPlayers === 8 ? [4, 4] : [5, 5];
+}
+
+function poulesDesc(nPlayers) {
+  if (nPlayers === 6)
+    return 'Poule unique : chacun affronte tout le monde (15 matchs). Les 2 premiers jouent la finale.';
+  if (nPlayers === 8)
+    return '2 poules de 4. Les 2 premiers de chaque poule en demi-finales croisées, puis finale.';
+  if (nPlayers === 10)
+    return '2 poules de 5. Les 2 premiers de chaque poule en demi-finales croisées, puis finale.';
+  return '4 poules de 3. Les 2 premiers de chaque poule en quarts de finale, puis demis et finale.';
+}
+
+function elimDesc(nPlayers) {
+  if (nPlayers === 6)
+    return 'Élimination directe : 2 barrages (4 joueurs tirés au sort) + 2 exempts → demi-finales → finale.';
+  if (nPlayers === 8)
+    return 'Élimination directe : quarts → demi-finales → finale.';
+  if (nPlayers === 10)
+    return 'Élimination directe : 2 barrages (4 joueurs) + 6 exempts → quarts → demis → finale.';
+  return 'Élimination directe : 4 barrages (8 joueurs) + 4 exempts → quarts → demis → finale.';
+}
+
+// Round-robin d'un groupe (méthode du cercle) → liste de rounds, chaque round = paires [i,j]
+function roundRobinRounds(size) {
+  var idx = [];
+  for (var i = 0; i < size; i++) idx.push(i);
+  if (size % 2) idx.push(-1); // bye si impair
+  var rounds = [], n = idx.length;
+  for (var r = 0; r < n - 1; r++) {
+    var pairs = [];
+    for (var k = 0; k < n / 2; k++) {
+      var a = idx[k], b = idx[n - 1 - k];
+      if (a >= 0 && b >= 0) pairs.push([a, b]);
+    }
+    rounds.push(pairs);
+    // rotation : le premier reste fixe
+    idx.splice(1, 0, idx.pop());
+  }
+  return rounds;
+}
+
+// Génère les matchs de poule en intercalant les rounds des groupes
+function genGroupMatches(groups) {
+  var roundsPerGroup = groups.map(function (g) { return roundRobinRounds(g.members.length); });
+  var maxRounds = Math.max.apply(null, roundsPerGroup.map(function (r) { return r.length; }));
+  var matches = [], mid = 0;
+  for (var r = 0; r < maxRounds; r++) {
+    groups.forEach(function (g, gi) {
+      var round = roundsPerGroup[gi][r] || [];
+      round.forEach(function (pair) {
+        matches.push({
+          id: 'm' + (mid++), phase: 'poule', group: g.label,
+          p1: g.members[pair[0]], p2: g.members[pair[1]],
+          s1: null, s2: null, status: 'pending', table: -1, label: 'Poule ' + g.label
+        });
+      });
+    });
+  }
+  return matches;
+}
+
+// Classement d'une poule : victoires, puis diff de manches, puis confrontation directe
+function groupStandings(groupLabel) {
+  var members = state.players.filter(function (p) { return p.group === groupLabel; });
+  var rows = members.map(function (p) {
+    return { id: p.id, name: p.name, wins: 0, framesFor: 0, framesAgainst: 0, played: 0 };
+  });
+  state.matches.forEach(function (m) {
+    if (m.phase !== 'poule' || m.group !== groupLabel || m.status !== 'done') return;
+    var r1 = rows.find(function (r) { return r.id === m.p1; });
+    var r2 = rows.find(function (r) { return r.id === m.p2; });
+    r1.played++; r2.played++;
+    r1.framesFor += m.s1; r1.framesAgainst += m.s2;
+    r2.framesFor += m.s2; r2.framesAgainst += m.s1;
+    if (m.s1 > m.s2) r1.wins++; else r2.wins++;
+  });
+  rows.sort(function (a, b) {
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    var dA = a.framesFor - a.framesAgainst, dB = b.framesFor - b.framesAgainst;
+    if (dB !== dA) return dB - dA;
+    // confrontation directe
+    var h2h = state.matches.find(function (m) {
+      return m.phase === 'poule' && m.status === 'done' &&
+        ((m.p1 === a.id && m.p2 === b.id) || (m.p1 === b.id && m.p2 === a.id));
+    });
+    if (h2h) {
+      var aWon = (h2h.p1 === a.id && h2h.s1 > h2h.s2) || (h2h.p2 === a.id && h2h.s2 > h2h.s1);
+      return aWon ? -1 : 1;
+    }
+    return 0;
+  });
+  return rows;
+}
+
+function groupLabels() {
+  var labels = [], seen = {};
+  state.players.forEach(function (p) {
+    if (!seen[p.group]) { seen[p.group] = true; labels.push(p.group); }
+  });
+  return labels.sort();
+}
+
+/* ================= Phase finale ================= */
+
+// Qualifiés d'une poule (2 premiers) ou null si poule non terminée
+function qualifiers(groupLabel) {
+  var done = state.matches.every(function (m) {
+    return m.phase !== 'poule' || m.group !== groupLabel || m.status === 'done';
+  });
+  if (!done) return null;
+  var st = groupStandings(groupLabel);
+  return { first: st[0].id, second: st[1].id };
+}
+
+function koMatchesDone(phase) {
+  return state.matches.every(function (m) {
+    return m.phase !== phase || m.status === 'done';
+  });
+}
+function phaseMatches(phase) {
+  return state.matches.filter(function (m) { return m.phase === phase; });
+}
+function winnerOf(m) { return m.s1 > m.s2 ? m.p1 : m.p2; }
+function loserOf(m) { return m.s1 > m.s2 ? m.p2 : m.p1; }
+
+/* ---------- Tirage élimination directe ---------- */
+
+// Répartit `order` (ids mélangés) en barrages + exempts, ou quarts directs pour 8
+function genElimDraw(order, n) {
+  var matches = [], mid = 0, byes = [];
+  function mk(phase, a, b, label) {
+    matches.push({
+      id: 'm' + (mid++), phase: phase, group: null, p1: a, p2: b,
+      s1: null, s2: null, status: 'pending', table: -1, label: label
+    });
+  }
+  if (n === 8) {
+    for (var i = 0; i < 4; i++) mk('quart', order[2 * i], order[2 * i + 1], 'Quart ' + (i + 1));
+    return { matches: matches, byes: [], firstRound: 'quart' };
+  }
+  // 6 → 2 barrages + 2 exempts (demis) ; 10 → 2 barrages + 6 exempts ; 12 → 4 + 4 (quarts)
+  var nBarr = n === 6 ? 2 : n - 8;
+  for (var j = 0; j < nBarr; j++) mk('barrage', order[2 * j], order[2 * j + 1], 'Barrage ' + (j + 1));
+  byes = order.slice(2 * nBarr);
+  return { matches: matches, byes: byes, firstRound: 'barrage' };
+}
+
+// Progression du tableau + consolante en format élimination
+function maybeAdvanceElim() {
+  var n = state.config.playerCount;
+  var fr = state.firstRound; // 'barrage' ou 'quart'
+
+  // --- consolante : perdants du 1er tour ---
+  if (state.config.consolante && koMatchesDone(fr)) {
+    var losers = phaseMatches(fr).map(loserOf);
+    if (losers.length === 2 && phaseMatches('cfinale').length === 0)
+      pushMatch('cfinale', losers[0], losers[1], 'Finale consolante');
+    if (losers.length === 4 && phaseMatches('cdemi').length === 0) {
+      pushMatch('cdemi', losers[0], losers[2], 'Demi consolante 1');
+      pushMatch('cdemi', losers[1], losers[3], 'Demi consolante 2');
+    }
+  }
+  if (phaseMatches('cdemi').length === 2 && koMatchesDone('cdemi') && phaseMatches('cfinale').length === 0) {
+    var cd = phaseMatches('cdemi');
+    pushMatch('cfinale', winnerOf(cd[0]), winnerOf(cd[1]), 'Finale consolante');
+  }
+
+  // --- tableau principal ---
+  if (n === 6 && koMatchesDone('barrage') && phaseMatches('demi').length === 0) {
+    var b = phaseMatches('barrage');
+    pushMatch('demi', state.byes[0], winnerOf(b[0]), 'Demi 1');
+    pushMatch('demi', state.byes[1], winnerOf(b[1]), 'Demi 2');
+  }
+  if ((n === 10 || n === 12) && koMatchesDone('barrage') && phaseMatches('quart').length === 0) {
+    var bw = phaseMatches('barrage').map(winnerOf);
+    // chaque exempt affronte un vainqueur de barrage ; les exempts restants s'affrontent
+    var pairs = [];
+    for (var i = 0; i < bw.length; i++) pairs.push([state.byes[i], bw[i]]);
+    for (var k = bw.length; k + 1 < state.byes.length; k += 2)
+      pairs.push([state.byes[k], state.byes[k + 1]]);
+    pairs.forEach(function (pr, i2) { pushMatch('quart', pr[0], pr[1], 'Quart ' + (i2 + 1)); });
+  }
+  if (phaseMatches('quart').length && koMatchesDone('quart') && phaseMatches('demi').length === 0) {
+    var q = phaseMatches('quart');
+    pushMatch('demi', winnerOf(q[0]), winnerOf(q[2]), 'Demi 1');
+    pushMatch('demi', winnerOf(q[1]), winnerOf(q[3]), 'Demi 2');
+  }
+  if (phaseMatches('demi').length && koMatchesDone('demi')) {
+    var d = phaseMatches('demi');
+    if (phaseMatches('finale').length === 0)
+      pushMatch('finale', winnerOf(d[0]), winnerOf(d[1]), 'Finale');
+    if (state.config.petiteFinale && phaseMatches('petite').length === 0)
+      pushMatch('petite', loserOf(d[0]), loserOf(d[1]), 'Petite finale');
+  }
+}
+
+// Id de match unique (compteur persisté — les matchs KO peuvent être régénérés)
+function newMatchId() { return 'm' + (state.nextId++); }
+
+function pushMatch(phase, p1, p2, label) {
+  state.matches.push({
+    id: newMatchId(), phase: phase, group: null,
+    p1: p1, p2: p2, s1: null, s2: null,
+    status: 'pending', table: -1, label: label
+  });
+}
+
+// Crée la phase KO suivante quand la précédente est terminée
+function maybeAdvanceKo() {
+  if (state.config.format === 'elim') { maybeAdvanceElim(); return; }
+  var n = state.config.playerCount;
+
+  if (n === 6) {
+    if (koMatchesDone('poule') && phaseMatches('finale').length === 0) {
+      var st = groupStandings('A');
+      pushMatch('finale', st[0].id, st[1].id, 'Finale');
+    }
+    return;
+  }
+
+  if (n === 8 || n === 10) {
+    if (koMatchesDone('poule') && phaseMatches('demi').length === 0) {
+      var qA = qualifiers('A'), qB = qualifiers('B');
+      pushMatch('demi', qA.first, qB.second, 'Demi 1');
+      pushMatch('demi', qB.first, qA.second, 'Demi 2');
+    }
+  }
+
+  if (n === 12) {
+    if (koMatchesDone('poule') && phaseMatches('quart').length === 0) {
+      var A = qualifiers('A'), B = qualifiers('B'), C = qualifiers('C'), D = qualifiers('D');
+      // Croisement pensé pour qu'un même duo de poule ne se retrouve qu'en finale
+      pushMatch('quart', A.first, C.second, 'Quart 1');
+      pushMatch('quart', B.first, D.second, 'Quart 2');
+      pushMatch('quart', C.first, A.second, 'Quart 3');
+      pushMatch('quart', D.first, B.second, 'Quart 4');
+    }
+    if (phaseMatches('quart').length && koMatchesDone('quart') && phaseMatches('demi').length === 0) {
+      var q = phaseMatches('quart');
+      pushMatch('demi', winnerOf(q[0]), winnerOf(q[3]), 'Demi 1');
+      pushMatch('demi', winnerOf(q[2]), winnerOf(q[1]), 'Demi 2');
+    }
+  }
+
+  // Finale commune à 8/10/12
+  if (phaseMatches('demi').length && koMatchesDone('demi') && phaseMatches('finale').length === 0) {
+    var d = phaseMatches('demi');
+    pushMatch('finale', winnerOf(d[0]), winnerOf(d[1]), 'Finale');
+  }
+}
+
+// Après correction d'un score, les matchs KO non commencés sont régénérés
+// (participants recalculés). Une phase KO est "verrouillée" dès qu'un de ses
+// matchs est en cours ou terminé : on n'y touche plus.
+function refreshPendingKo() {
+  var locked = {};
+  state.matches.forEach(function (m) {
+    if (m.phase !== 'poule' && m.status !== 'pending') locked[m.phase] = true;
+  });
+  state.matches = state.matches.filter(function (m) {
+    return m.phase === 'poule' || m.status !== 'pending' || locked[m.phase];
+  });
+  maybeAdvanceKo();
+}
+
+/* ================= Ordonnancement des tables ================= */
+
+// Phase la plus précoce ayant encore des matchs en attente
+function earliestPendingPhase() {
+  var best = null;
+  state.matches.forEach(function (m) {
+    if (m.status !== 'pending') return;
+    if (best === null || PHASE_ORDER[m.phase] < best) best = PHASE_ORDER[m.phase];
+  });
+  return best;
+}
+
+function busyPlayers() {
+  var busy = {};
+  state.matches.forEach(function (m) {
+    if (m.status === 'playing') { busy[m.p1] = true; busy[m.p2] = true; }
+  });
+  return busy;
+}
+
+// Auto-arbitrage : les matchs ne sont plus assignés automatiquement.
+// Chacun lance son match depuis la liste — il occupe alors le 1er
+// emplacement libre (state.tables = nombre max de matchs simultanés).
+function launchMatch(id) {
+  var m = state.matches.find(function (x) { return x.id === id; });
+  if (!m || m.status !== 'pending') return;
+  var busy = busyPlayers();
+  if (busy[m.p1] || busy[m.p2]) { toast('Un joueur est déjà sur un match'); return; }
+  var slot = -1;
+  state.tables.forEach(function (t, i) { if (t.matchId === null && slot < 0) slot = i; });
+  if (slot < 0) { toast('Toutes les tables sont occupées'); return; }
+  state.tables[slot].matchId = m.id;
+  m.status = 'playing';
+  m.table = slot;
+  startMatchTimer(m);
+  saveState();
+  render();
+  toast(m.label + ' lancé — table ' + (slot + 1));
+}
+
+// Retire un match en cours (lancé par erreur) — retour en attente
+function unlaunchMatch(id) {
+  var m = state.matches.find(function (x) { return x.id === id; });
+  if (!m || m.status !== 'playing') return;
+  if (m.table >= 0 && state.tables[m.table]) state.tables[m.table].matchId = null;
+  m.table = -1;
+  m.status = 'pending';
+  delete m.timer;
+  saveState();
+  render();
+}
+
+/* ================= Chrono par match ================= */
+
+// En live, endsAt est posé par l'horloge du device qui lance le match : on
+// synchronise sur l'heure serveur Firebase pour que tous les appareils
+// affichent le même temps restant malgré les dérives d'horloge locales.
+var serverOffsetMs = 0;
+function nowSynced() { return Date.now() + serverOffsetMs; }
+if (firebaseReady) {
+  firebase.database().ref('.info/serverTimeOffset').on('value', function (snap) {
+    serverOffsetMs = snap.val() || 0;
+  });
+}
+
+// Deux chronos distincts par match : la mise en place (prepMin, défaut 5)
+// décompte d'abord, puis le chrono de jeu (RT × minManche, défaut 10 →
+// RT2 = 20 min, RT4 = 40 min, RT5 = 50 min) démarre automatiquement.
+function prepMs() { return (state.config.prepMin || 0) * 60000; }
+function playMs(m) {
+  if (state.config.durMin) return state.config.durMin * 60000; // vieux exports JSON
+  var rt = state.config.raceTo[m.phase] || 2;
+  return rt * (state.config.minManche || 10) * 60000;
+}
+
+function startMatchTimer(m) {
+  if (!state.config.timer || m.timer) return;
+  delete _timerAlerted[m.id]; // réarme l'alerte expiration si match relancé
+  var prep = prepMs();
+  m.timer = {
+    phase: prep > 0 ? 'prep' : 'play',
+    running: true,
+    endsAt: nowSynced() + (prep > 0 ? prep : playMs(m)),
+    remainingMs: 0
+  };
+}
+
+function timerRemainingMs(m) {
+  if (!m.timer) return null;
+  return m.timer.running ? m.timer.endsAt - nowSynced() : m.timer.remainingMs;
+}
+
+function matchTimerExpired(m) {
+  var r = timerRemainingMs(m);
+  // seule l'expiration du chrono de jeu valide un score sans race-to
+  return r !== null && r <= 0 && (m.timer.phase || 'play') === 'play';
+}
+
+function toggleMatchTimer(m) {
+  if (!m.timer) return;
+  if (m.timer.running) {
+    m.timer.remainingMs = m.timer.endsAt - nowSynced();
+    m.timer.running = false;
+  } else {
+    m.timer.endsAt = nowSynced() + m.timer.remainingMs;
+    m.timer.running = true;
+  }
+}
+
+function addMatchTime(m, ms) {
+  if (!m.timer) return;
+  if (m.timer.running) m.timer.endsAt += ms;
+  else m.timer.remainingMs += ms;
+}
+
+// Met en pause les chronos des matchs en cours si l'état est plus vieux que
+// maxAgeMs (app fermée entre deux soirées) ; maxAgeMs=0 → tout en pause
+function pauseStaleTimers(maxAgeMs) {
+  var stale = Date.now() - (state.savedAt || 0) > maxAgeMs;
+  var paused = false;
+  state.matches.forEach(function (m) {
+    if (m.status === 'playing' && m.timer && m.timer.running && stale) {
+      m.timer.remainingMs = Math.max(0, m.timer.endsAt - nowSynced());
+      m.timer.running = false;
+      paused = true;
+    }
+  });
+  return paused;
+}
+
+function fmtMs(ms) {
+  var neg = ms < 0;
+  // ceil : un compte à rebours affiche la seconde entamée (4:59.6 → 5:00 puis 4:59)
+  var t = Math.ceil(Math.abs(ms) / 1000);
+  var hh = Math.floor(t / 3600), mm = Math.floor((t % 3600) / 60), ss = t % 60;
+  var mmss = (hh && mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss;
+  return (neg ? '−' : '') + (hh ? hh + ':' + mmss : mmss);
+}
+
+// Met à jour les décomptes affichés (tick chaque seconde, sans re-render complet)
+var _timerAlerted = {};
+function tickTimers() {
+  if (!state) return;
+  state.matches.forEach(function (m) {
+    if (!m.timer || m.status !== 'playing') return;
+    var node = document.getElementById('tmr_' + m.id);
+    if (!node) return;
+    var r = timerRemainingMs(m);
+    // Fin de mise en place : bascule automatique sur le chrono de jeu
+    if (r <= 0 && (m.timer.phase || 'play') === 'prep') {
+      if (m.timer.running) {
+        m.timer.phase = 'play';
+        m.timer.endsAt = nowSynced() + playMs(m);
+        r = playMs(m);
+        saveState();
+        renderTables();
+        toast('Mise en place terminée — ' + m.label + ' (table ' + (m.table + 1) + ')');
+      } else {
+        r = 0;
+      }
+    }
+    var isPlay = (m.timer.phase || 'play') === 'play';
+    node.textContent = (m.timer.running ? '' : '❚❚ ') +
+      (isPlay ? '' : 'Inst. ') + fmtMs(r);
+    // warn/out uniquement sur le chrono de jeu (la mise en place dure ≤ 5 min
+    // et serait sinon affichée "presque finie" en permanence)
+    node.className = 'tcount' + (!isPlay ? ' prep' : r <= 0 ? ' out' : r <= 5 * 60000 ? ' warn' : '');
+    if (r <= 0 && m.timer.running && !_timerAlerted[m.id]) {
+      _timerAlerted[m.id] = true;
+      toast('Temps écoulé — ' + m.label + ' (table ' + (m.table + 1) + ')');
+    }
+  });
+}
+setInterval(tickTimers, 1000);
+
+// Prochain match affiché pour une table libre : le premier match planifiable,
+// sinon le premier match en attente (joueurs encore occupés)
+function nextMatchFor() {
+  var phase = earliestPendingPhase();
+  if (phase === null) return null;
+  var busy = busyPlayers();
+  var free = state.matches.find(function (x) {
+    return x.status === 'pending' && PHASE_ORDER[x.phase] === phase &&
+      !busy[x.p1] && !busy[x.p2];
+  });
+  if (free) return { match: free, busy: false };
+  var any = state.matches.find(function (x) {
+    return x.status === 'pending' && PHASE_ORDER[x.phase] === phase;
+  });
+  return any ? { match: any, busy: true } : null;
+}
+
+/* ================= Création du tournoi ================= */
+
+function startTournament() {
+  if (liveRef) stopLive(); // un nouveau tournoi local détache du live en cours
+  var n = setupCfg.players;
+  var inputs = document.querySelectorAll('#namesGrid input');
+  var names = [];
+  inputs.forEach(function (inp, i) {
+    names.push(inp.value.trim() || ('Joueur ' + (i + 1)));
+  });
+  // doublons → suffixe
+  var seen = {};
+  names = names.map(function (nm) {
+    if (seen[nm]) { seen[nm]++; return nm + ' ' + seen[nm]; }
+    seen[nm] = 1; return nm;
+  });
+  rememberNames(names);
+
+  var order = shuffle(names.map(function (_, i) { return i; }));
+  function rtVal(k) {
+    var inp = el('rt_' + k);
+    return Math.max(1, parseInt(inp && inp.value, 10) || 2);
+  }
+  var timerOn = el('optTimer').checked;
+  var players = [], raceto, matches, extra = {};
+
+  if (setupCfg.format === 'poules') {
+    var sizes = groupSizes(n);
+    var labels = ['A', 'B', 'C', 'D'];
+    var groups = [], pos = 0;
+    sizes.forEach(function (sz, gi) {
+      var g = { label: labels[gi], members: [] };
+      for (var k = 0; k < sz; k++) {
+        var pid = order[pos++];
+        players.push({ id: pid, name: names[pid], group: labels[gi] });
+        g.members.push(pid);
+      }
+      groups.push(g);
+    });
+    raceto = {};
+    phasesFor(n).forEach(function (ph) { raceto[ph] = rtVal(ph); });
+    matches = genGroupMatches(groups);
+  } else {
+    // Élimination directe : un race-to pour le tableau, un pour la consolante,
+    // un pour la finale (petite finale = race-to du tableau)
+    var main = rtVal('main'), conso = rtVal('conso'), fin = rtVal('efinale');
+    raceto = {
+      barrage: main, quart: main, demi: main, petite: main,
+      finale: fin, cdemi: conso, cfinale: conso
+    };
+    order.forEach(function (pid) {
+      players.push({ id: pid, name: names[pid], group: null });
+    });
+    var draw = genElimDraw(order, n);
+    matches = draw.matches;
+    extra = {
+      byes: draw.byes, firstRound: draw.firstRound,
+      consolante: el('optConso').checked, petiteFinale: el('optPetite').checked
+    };
+  }
+
+  state = {
+    config: {
+      playerCount: n, tableCount: setupCfg.tables,
+      format: setupCfg.format, raceTo: raceto, timer: timerOn,
+      minManche: parseInt(el('optMinManche').value, 10) || 10,
+      prepMin: isNaN(parseInt(el('optPrepMin').value, 10)) ? 5
+        : parseInt(el('optPrepMin').value, 10),
+      consolante: !!extra.consolante, petiteFinale: !!extra.petiteFinale
+    },
+    players: players,
+    matches: matches,
+    byes: extra.byes || [],
+    firstRound: extra.firstRound || null,
+    tables: Array.from({ length: setupCfg.tables }, function () { return { matchId: null }; })
+  };
+  state.nextId = state.matches.length; // les ids suivants vont aux matchs KO
+  _timerAlerted = {};
+  saveState();
+  render();
+  toast('Tournoi lancé — bon jeu !');
+}
+
+/* ================= Saisie des scores ================= */
+
+var scoreCtx = { matchId: null, s1: 0, s2: 0 };
+
+function openScoreModal(matchId) {
+  var m = state.matches.find(function (x) { return x.id === matchId; });
+  if (!m) return;
+  scoreCtx.matchId = matchId;
+  scoreCtx.s1 = m.s1 === null ? 0 : m.s1;
+  scoreCtx.s2 = m.s2 === null ? 0 : m.s2;
+  var rt = state.config.raceTo[m.phase];
+  el('scoreTitle').textContent = m.label;
+  el('scoreSub').textContent = 'Race to ' + rt + ' — ' + PHASE_LABEL[m.phase] +
+    (matchTimerExpired(m) ? ' · temps écoulé' : '');
+  el('scName1').textContent = playerName(m.p1);
+  el('scName2').textContent = playerName(m.p2);
+  updateScoreModal();
+  el('scoreOverlay').classList.add('open');
+}
+
+function updateScoreModal() {
+  var m = state.matches.find(function (x) { return x.id === scoreCtx.matchId; });
+  var rt = state.config.raceTo[m.phase];
+  el('scVal1').textContent = scoreCtx.s1;
+  el('scVal2').textContent = scoreCtx.s2;
+  // Valide si un joueur a atteint le race-to, ou si le chrono est écoulé
+  // (le joueur en tête l'emporte)
+  var ok = scoreCtx.s1 !== scoreCtx.s2 &&
+    (scoreCtx.s1 === rt || scoreCtx.s2 === rt || matchTimerExpired(m));
+  el('scConfirm').disabled = !ok;
+}
+
+function scoreBtn(delta, which) {
+  var m = state.matches.find(function (x) { return x.id === scoreCtx.matchId; });
+  var rt = state.config.raceTo[m.phase];
+  var key = which === 1 ? 's1' : 's2';
+  scoreCtx[key] = Math.min(rt, Math.max(0, scoreCtx[key] + delta));
+  updateScoreModal();
+}
+
+function confirmScore() {
+  var m = state.matches.find(function (x) { return x.id === scoreCtx.matchId; });
+  m.s1 = scoreCtx.s1; m.s2 = scoreCtx.s2;
+  m.status = 'done';
+  delete m.timer; // chrono mort — ne pas le trimballer dans le state/Firebase
+  if (m.table >= 0) {
+    state.tables[m.table].matchId = null;
+    m.table = -1;
+  }
+  el('scoreOverlay').classList.remove('open');
+  refreshPendingKo();
+  maybeAdvanceKo();
+  saveState();
+  render();
+  var w = m.s1 > m.s2 ? m.p1 : m.p2;
+  toast(playerName(w) + ' remporte le match');
+  checkTournamentEnd();
+}
+
+function checkTournamentEnd() {
+  var f = phaseMatches('finale');
+  if (f.length && f[0].status === 'done') {
+    var champ = winnerOf(f[0]);
+    setTimeout(function () {
+      toast(playerName(champ) + ' remporte le tournoi !');
+    }, 400);
+  }
+}
+
+/* ================= Rendu ================= */
+
+function matchRowHtml(m, clickable) {
+  var rt = state.config.raceTo[m.phase];
+  var done = m.status === 'done';
+  var w1 = done && m.s1 > m.s2, w2 = done && m.s2 > m.s1;
+  var score = done ? (m.s1 + ' – ' + m.s2) : (m.status === 'playing' ? '– vs –' : 'vs');
+  var badge = m.status === 'playing' ? '<span class="badge live">en cours</span>'
+    : done ? '<span class="badge done">RT' + rt + '</span>'
+    : '<span class="badge">RT' + rt + '</span>';
+  // en auto-arbitrage, un match en attente se lance manuellement
+  var launch = m.status === 'pending'
+    ? '<button class="btn ghost small" data-launch="' + m.id + '">Lancer</button>' : '';
+  return '<div class="match-row ' + m.status + (clickable ? ' clickable' : '') + '"' +
+    (clickable ? ' data-match="' + m.id + '"' : '') + '>' +
+    '<span class="pname' + (w1 ? ' winner' : '') + '">' + esc(playerName(m.p1)) + '</span>' +
+    '<span class="score">' + score + '</span>' +
+    '<span class="pname right' + (w2 ? ' winner' : '') + '">' + esc(playerName(m.p2)) + '</span>' +
+    badge + launch + '</div>';
+}
+
+function renderTables() {
+  var wrap = el('tablesRow');
+  wrap.innerHTML = '';
+  var done = state.matches.filter(function (m) { return m.status === 'done'; }).length;
+  el('progressInfo').textContent = done + '/' + state.matches.length + ' matchs joués';
+  state.tables.forEach(function (t, ti) {
+    var card = document.createElement('div');
+    card.className = 'table-card' + (t.matchId !== null ? ' live' : '');
+    var inner = '<div class="tname">Table ' + (ti + 1) + '</div>';
+    if (t.matchId !== null) {
+      var m = state.matches.find(function (x) { return x.id === t.matchId; });
+      var prepPhase = m.timer && (m.timer.phase || 'play') === 'prep';
+      inner += '<div class="tstate live">' + (prepPhase ? 'Mise en place' : 'Match en cours') +
+        ' · ' + esc(m.label) + ' · RT' + state.config.raceTo[m.phase] + '</div>';
+      inner += matchRowHtml(m, false);
+      if (m.timer) {
+        inner += '<div class="tcount" id="tmr_' + m.id + '">--:--</div>';
+        inner += '<div class="tcontrols">' +
+          '<button class="btn ghost small" data-pause="' + m.id + '">' +
+            (m.timer.running ? 'Pause' : 'Reprendre') + '</button>' +
+          '<button class="btn ghost small" data-minus5="' + m.id + '">−5</button>' +
+          '<button class="btn ghost small" data-plus5="' + m.id + '">+5</button>' +
+          '</div>';
+      }
+      inner += '<button class="btn primary small" style="width:100%;margin-top:8px" ' +
+        'data-score="' + m.id + '">Saisir le score</button>' +
+        '<button class="btn ghost small" style="width:100%;margin-top:6px" ' +
+        'data-unlaunch="' + m.id + '">Retirer le match</button>';
+    } else {
+      inner += '<div class="tstate">Libre</div>';
+      var nx = nextMatchFor();
+      inner += nx
+        ? '<div class="next-up">À suivre : <b>' + esc(playerName(nx.match.p1)) + '</b> vs <b>' +
+          esc(playerName(nx.match.p2)) + '</b>' + (nx.busy ? ' (joueurs occupés)' : '') + '</div>'
+        : '<div class="next-up">Aucun match en attente</div>';
+    }
+    card.innerHTML = inner;
+    wrap.appendChild(card);
+  });
+}
+
+function renderGroups() {
+  var wrap = el('groupsWrap');
+  wrap.innerHTML = '';
+  groupLabels().forEach(function (gl) {
+    var st = groupStandings(gl);
+    var card = document.createElement('div');
+    card.className = 'card';
+    var html = '<div style="font-weight:700">Poule ' + gl + '</div>';
+    html += '<table class="standings"><tr><th>#</th><th>Joueur</th><th>V</th><th>J</th><th>Diff</th></tr>';
+    st.forEach(function (r, i) {
+      html += '<tr class="' + (i < 2 ? 'qualified' : '') + '"><td>' + (i + 1) + '</td><td>' +
+        esc(r.name) + '</td><td>' + r.wins + '</td><td>' + r.played + '</td><td>' +
+        (r.framesFor - r.framesAgainst > 0 ? '+' : '') + (r.framesFor - r.framesAgainst) + '</td></tr>';
+    });
+    html += '</table>';
+    html += '<div class="mlist">';
+    state.matches.forEach(function (m) {
+      if (m.phase === 'poule' && m.group === gl) html += matchRowHtml(m, m.status === 'done');
+    });
+    html += '</div>';
+    card.innerHTML = html;
+    wrap.appendChild(card);
+  });
+}
+
+function renderBracket() {
+  var wrap = el('bracketWrap');
+  var isElim = state.config.format === 'elim';
+  var ko = state.matches.filter(function (m) { return m.phase !== 'poule'; });
+  el('bracketTitle').classList.toggle('hidden', ko.length === 0);
+  el('bracketTitle').textContent = isElim ? 'Tableau & consolante' : 'Phase finale';
+  wrap.innerHTML = '';
+  var plural = {
+    barrage: 'Barrages', quart: 'Quarts de finale', demi: 'Demi-finales',
+    petite: 'Petite finale', finale: 'Finale',
+    cdemi: 'Demi-finales consolante', cfinale: 'Finale consolante'
+  };
+  // En élim : un card tableau principal, un card consolante
+  var sections = isElim
+    ? [['Tableau principal', ['barrage', 'quart', 'demi', 'petite', 'finale']],
+       ['Consolante', ['cdemi', 'cfinale']]]
+    : [[null, ['quart', 'demi', 'finale']]];
+  sections.forEach(function (sec) {
+    var html = sec[0] ? '<h3 style="color:var(--neon)">' + sec[0] + '</h3>' : '';
+    var any = false;
+    sec[1].forEach(function (ph) {
+      var list = phaseMatches(ph);
+      if (!list.length) return;
+      any = true;
+      html += '<h3>' + plural[ph] + ' · race to ' + state.config.raceTo[ph] + '</h3>';
+      list.forEach(function (m) {
+        html += matchRowHtml(m, m.status !== 'pending');
+      });
+    });
+    if (!any) return;
+    var div = document.createElement('div');
+    div.className = 'bracket-phase card';
+    div.innerHTML = html;
+    wrap.appendChild(div);
+  });
+}
+
+/* ================= Arbre visuel (bracket miroir) ================= */
+// Deux demi-arbres convergent vers la finale au centre : côté gauche =
+// demi 1 (et tout son sous-arbre), côté droit = demi 2 en miroir.
+// nœud = {phase, idx, label, short, f:[slotA,slotB]|null}
+// slot = {node} (vainqueur) | {loser} (perdant) | {chip:'txt'|{pid}|{grp,rank}}
+
+var KO_W = 130, KO_STEP = KO_W + 24, KO_CGAP = 44,
+    KO_BOX_H = 40, KO_CHIP_H = 28, KO_LEAF_GAP = 12, KO_TITLE_H = 18;
+var KO_ROUND = { barrage: 'Barrages', quart: 'Quarts', demi: 'Demi-finales',
+  finale: 'Finale', petite: '3e place', cdemi: 'Demis conso', cfinale: 'Finale conso' };
+
+function koNode(phase, idx, label, fa, fb) {
+  var s = { barrage: 'B', quart: 'Q', demi: 'D', cdemi: 'CD', cfinale: 'CF' }[phase];
+  return { phase: phase, idx: idx, label: label,
+    short: (phase === 'finale' ? 'F' : phase === 'petite' ? '3e' : s + (idx + 1)),
+    f: fa !== undefined ? [fa, fb] : null };
+}
+function koMatchOf(node) { return phaseMatches(node.phase)[node.idx] || null; }
+
+function koChipText(c) {
+  if (c == null) return '?';
+  if (typeof c === 'string') return c;
+  if (c.pid !== undefined) return playerName(c.pid); // id 0 est valide (falsy)
+  if (c.grp) {
+    var q = state.config.format === 'poules' ? qualifiers(c.grp) : null;
+    if (q) return playerName(c.rank === 1 ? q.first : q.second);
+    return (c.rank === 1 ? '1er' : '2e') + ' poule ' + c.grp;
+  }
+  return '?';
+}
+// Texte d'un slot : nom du joueur quand la source est décidée, sinon rôle
+function koSlotText(s) {
+  if (!s) return '?';
+  if (s.node) {
+    var m = koMatchOf(s.node);
+    return m && m.status === 'done' ? playerName(winnerOf(m)) : 'Vainqueur ' + s.node.short;
+  }
+  if (s.loser) {
+    var lm = koMatchOf(s.loser);
+    return lm && lm.status === 'done' ? playerName(loserOf(lm)) : 'Perdant ' + s.loser.short;
+  }
+  return koChipText(s.chip);
+}
+
+// Structure du tableau principal selon format et nombre de joueurs
+function koSpecMain() {
+  var cfg = state.config, n = cfg.playerCount, elim = cfg.format === 'elim';
+  var byPhase = {}, demiL = null, demiR = null;
+  function reg(node) {
+    (byPhase[node.phase] = byPhase[node.phase] || []).push(node);
+    return node;
+  }
+  function bye(i) { return { chip: { pid: state.byes[i] } }; }
+  if (elim) {
+    if (n === 6) {
+      demiL = reg(koNode('demi', 0, 'Demi 1', bye(0), { node: reg(koNode('barrage', 0, 'Barrage 1')) }));
+      demiR = reg(koNode('demi', 1, 'Demi 2', bye(1), { node: reg(koNode('barrage', 1, 'Barrage 2')) }));
+    } else if (n === 8) {
+      var q8 = [0, 1, 2, 3].map(function (i) { return reg(koNode('quart', i, 'Quart ' + (i + 1))); });
+      demiL = reg(koNode('demi', 0, 'Demi 1', { node: q8[0] }, { node: q8[2] }));
+      demiR = reg(koNode('demi', 1, 'Demi 2', { node: q8[1] }, { node: q8[3] }));
+    } else if (n === 10) {
+      var q10 = [
+        reg(koNode('quart', 0, 'Quart 1', bye(0), { node: reg(koNode('barrage', 0, 'Barrage 1')) })),
+        reg(koNode('quart', 1, 'Quart 2', bye(1), { node: reg(koNode('barrage', 1, 'Barrage 2')) })),
+        reg(koNode('quart', 2, 'Quart 3', bye(2), bye(3))),
+        reg(koNode('quart', 3, 'Quart 4', bye(4), bye(5)))
+      ];
+      demiL = reg(koNode('demi', 0, 'Demi 1', { node: q10[0] }, { node: q10[2] }));
+      demiR = reg(koNode('demi', 1, 'Demi 2', { node: q10[1] }, { node: q10[3] }));
+    } else {
+      var q12 = [0, 1, 2, 3].map(function (i) {
+        return reg(koNode('quart', i, 'Quart ' + (i + 1), bye(i),
+          { node: reg(koNode('barrage', i, 'Barrage ' + (i + 1))) }));
+      });
+      demiL = reg(koNode('demi', 0, 'Demi 1', { node: q12[0] }, { node: q12[2] }));
+      demiR = reg(koNode('demi', 1, 'Demi 2', { node: q12[1] }, { node: q12[3] }));
+    }
+  } else {
+    var qc = function (g, r) { return { chip: { grp: g, rank: r } }; };
+    if (n === 12) {
+      var qp = [
+        reg(koNode('quart', 0, 'Quart 1', qc('A', 1), qc('C', 2))),
+        reg(koNode('quart', 1, 'Quart 2', qc('B', 1), qc('D', 2))),
+        reg(koNode('quart', 2, 'Quart 3', qc('C', 1), qc('A', 2))),
+        reg(koNode('quart', 3, 'Quart 4', qc('D', 1), qc('B', 2)))
+      ];
+      demiL = reg(koNode('demi', 0, 'Demi 1', { node: qp[0] }, { node: qp[3] }));
+      demiR = reg(koNode('demi', 1, 'Demi 2', { node: qp[2] }, { node: qp[1] }));
+    } else if (n > 6) {
+      demiL = reg(koNode('demi', 0, 'Demi 1', qc('A', 1), qc('B', 2)));
+      demiR = reg(koNode('demi', 1, 'Demi 2', qc('B', 1), qc('A', 2)));
+    } else {
+      var f6 = reg(koNode('finale', 0, 'Finale', qc('A', 1), qc('A', 2)));
+      return { final: f6, demis: [null, null], byPhase: byPhase };
+    }
+  }
+  var finale = reg(koNode('finale', 0, 'Finale', { node: demiL }, { node: demiR }));
+  return { final: finale, demis: [demiL, demiR], byPhase: byPhase };
+}
+
+// Consolante : perdants du 1er tour (2 → finale directe, 4 → demis puis finale)
+function koSpecConso(byPhase) {
+  var cfg = state.config;
+  if (cfg.format !== 'elim' || !cfg.consolante) return null;
+  var fr = (byPhase[state.firstRound] || []).slice()
+    .sort(function (a, b) { return a.idx - b.idx; });
+  if (fr.length === 4) {
+    var c1 = koNode('cdemi', 0, 'Demi consolante 1', { loser: fr[0] }, { loser: fr[2] });
+    var c2 = koNode('cdemi', 1, 'Demi consolante 2', { loser: fr[1] }, { loser: fr[3] });
+    return koNode('cfinale', 0, 'Finale consolante', { node: c1 }, { node: c2 });
+  }
+  if (fr.length === 2)
+    return koNode('cfinale', 0, 'Finale consolante', { loser: fr[0] }, { loser: fr[1] });
+  return null;
+}
+
+// Affecte _d (profondeur depuis la feuille) et _y à chaque élément d'un
+// sous-arbre ; les feuilles s'empilent de haut en bas dans l'ordre du parcours
+function koWalk(slot, ctx) {
+  if (slot.chip !== undefined || slot.loser) {
+    slot._d = 0; slot._y = ctx.y; ctx.y += KO_CHIP_H + KO_LEAF_GAP;
+    return 0;
+  }
+  var node = slot.node;
+  if (!node.f) {
+    node._d = 0; node._y = ctx.y; ctx.y += KO_BOX_H + KO_LEAF_GAP;
+    return 0;
+  }
+  var d = Math.max(koWalk(node.f[0], ctx), koWalk(node.f[1], ctx)) + 1;
+  node._d = d;
+  node._y = (koCY(node.f[0]) + koCY(node.f[1])) / 2 - KO_BOX_H / 2;
+  return d;
+}
+function koCY(s) {
+  if (s.chip !== undefined || s.loser) return s._y + KO_CHIP_H / 2;
+  return s.node._y + KO_BOX_H / 2;
+}
+
+// Émet les boîtes/chips/connexions d'un sous-arbre (côté 'L' ou 'R')
+function koEmit(slot, side, rightBase, out) {
+  var isChip = slot.chip !== undefined || slot.loser;
+  var node = isChip ? null : slot.node;
+  var d = isChip ? 0 : node._d;
+  var x = side === 'L' ? d * KO_STEP : rightBase + (out.dMax - d) * KO_STEP;
+  var box = { x: x, y: (isChip ? slot._y : node._y) + KO_TITLE_H,
+    w: KO_W, h: isChip ? KO_CHIP_H : KO_BOX_H, slot: slot };
+  if (isChip) {
+    if (!(x in out.titles)) {
+      var c = slot.chip;
+      out.titles[x] = slot.loser ? 'Repêchés'
+        : c && c.grp ? 'Qualifiés' : c && c.pid !== undefined ? 'Exempts' : 'Repêchés';
+    }
+    out.chips.push(box);
+  } else {
+    out.titles[x] = KO_ROUND[node.phase] || node.phase;
+    out.nodes.push({ box: box, node: node });
+    if (node.f) node.f.forEach(function (ch) {
+      out.edges.push([koEmit(ch, side, rightBase, out), box]);
+    });
+  }
+  return box;
+}
+
+// Ligne de connexion coudée enfant → parent (style bracket classique)
+function koPath(c, p) {
+  var x1, x2 = p.x, y2 = p.y + p.h / 2;
+  if (c.x + c.w <= p.x + 1) { x1 = c.x + c.w; } // enfant à gauche du parent
+  else { x1 = c.x; x2 = p.x + p.w; }          // enfant à droite (côté miroir)
+  var mx = (x1 + x2) / 2, y1 = c.y + c.h / 2;
+  return 'M' + x1 + ' ' + y1 + 'H' + mx + 'V' + y2 + 'H' + x2;
+}
+
+function koBoxHtml(nb) {
+  var node = nb.node, b = nb.box, m = koMatchOf(node);
+  var rows, cls = 'ko-box', clickable = false;
+  if (!m) {
+    rows = koRowHtml(koSlotText(node.f[0]), '', false) +
+           koRowHtml(koSlotText(node.f[1]), '', false);
+  } else {
+    var done = m.status === 'done';
+    rows = koRowHtml(playerName(m.p1), done ? m.s1 : '', done && m.s1 > m.s2) +
+           koRowHtml(playerName(m.p2), done ? m.s2 : '', done && m.s2 > m.s1);
+    cls += ' ' + m.status;
+    clickable = m.status !== 'pending';
+  }
+  return '<div class="' + cls + '"' + (clickable ? ' data-score="' + m.id + '"' : '') +
+    ' style="left:' + b.x + 'px;top:' + b.y + 'px">' + rows + '</div>';
+}
+function koRowHtml(name, score, win) {
+  var dim = score === '' ? ' dim' : '';
+  return '<div class="kr' + (win ? ' win' : '') + '">' +
+    '<span class="nm' + dim + '">' + esc(name) + '</span>' +
+    '<span class="sc">' + score + '</span></div>';
+}
+
+// Construit le stage HTML complet d'un arbre (finale au centre, côtés miroir)
+function koStageHtml(root, extraNode) {
+  var out = { nodes: [], chips: [], edges: [], titles: {}, dMax: 0 };
+  var ctxL = { y: 0 }, ctxR = { y: 0 };
+  var dL = koWalk(root.f[0], ctxL), dR = koWalk(root.f[1], ctxR);
+  var contentH = Math.max(ctxL.y, ctxR.y) - KO_LEAF_GAP;
+  var finalX = dL * KO_STEP + KO_W + KO_CGAP;
+  var rightBase = finalX + KO_W + KO_CGAP;
+  var totalW = rightBase + dR * KO_STEP + KO_W;
+  out.dMax = dL;
+  var bL = koEmit(root.f[0], 'L', 0, out);
+  out.dMax = dR;
+  var bR = koEmit(root.f[1], 'R', rightBase, out);
+  var finalY = (bL.y + bL.h / 2 + bR.y + bR.h / 2) / 2 - KO_BOX_H / 2;
+  var finalBox = { x: finalX, y: finalY, w: KO_W, h: KO_BOX_H };
+  out.nodes.push({ box: finalBox, node: root });
+  out.titles[finalX] = KO_ROUND[root.phase] || 'Finale';
+  out.edges.push([bL, finalBox], [bR, finalBox]);
+  var totalH = Math.max(contentH + KO_TITLE_H, finalY + KO_BOX_H) + 4;
+  if (extraNode) {
+    out.nodes.push({ box: { x: finalX, y: totalH + 6, w: KO_W, h: KO_BOX_H }, node: extraNode });
+    totalH += KO_BOX_H + 10;
+  }
+  var svg = '<svg class="ko-lines" width="' + totalW + '" height="' + totalH + '">' +
+    out.edges.map(function (e) { return '<path d="' + koPath(e[0], e[1]) + '"/>'; }).join('') + '</svg>';
+  var titles = Object.keys(out.titles).map(function (x) {
+    return '<div class="ko-round" style="left:' + x + 'px">' + out.titles[x] + '</div>';
+  }).join('');
+  var boxes = out.chips.map(function (c) {
+    return '<div class="ko-chip" style="left:' + c.x + 'px;top:' + c.y + 'px">' +
+      esc(koSlotText(c.slot)) + '</div>';
+  }).join('') + out.nodes.map(koBoxHtml).join('');
+  return '<div class="ko-stage" style="width:' + totalW + 'px;height:' + totalH + 'px">' +
+    svg + titles + boxes + '</div>';
+}
+
+// Vue "arbre" du tableau (et de la consolante) en bas de l'écran tournoi
+function renderKoTree() {
+  var sec = el('koTreeSec');
+  if (!sec) return;
+  if (!state) { sec.classList.add('hidden'); sec.innerHTML = ''; return; }
+  var spec = koSpecMain();
+  var petite = state.config.petiteFinale
+    ? koNode('petite', 0, 'Petite finale', { loser: spec.demis[0] }, { loser: spec.demis[1] })
+    : null;
+  var html = '<h2>Arbre du tournoi <span class="h2-note">glisser →</span></h2>' +
+    '<div class="ko-scroll">' + koStageHtml(spec.final, petite) + '</div>';
+  var cf = koSpecConso(spec.byPhase);
+  if (cf) html += '<h2>Consolante</h2><div class="ko-scroll">' + koStageHtml(cf, null) + '</div>';
+  sec.innerHTML = html;
+  sec.classList.remove('hidden');
+}
+
+// Affiche le badge live + adapte les boutons selon le rôle (hôte/participant)
+function renderLiveUI() {
+  var badge = el('liveBadge'), share = el('btnShare'), stop = el('btnStopLive');
+  if (liveRole === 'host') {
+    badge.classList.remove('hidden');
+    badge.innerHTML = 'En direct — code : ' +
+      '<b style="color:var(--neon);font-size:20px;letter-spacing:3px">' + liveCode + '</b>' +
+      ' <button class="btn ghost small" data-copylive="1">Copier le lien</button>';
+    share.classList.add('hidden');
+    stop.classList.remove('hidden');
+    stop.textContent = 'Arrêter le live';
+  } else if (liveRole === 'viewer') {
+    badge.classList.remove('hidden');
+    badge.innerHTML = 'Live — tournoi <b style="color:var(--neon)">' + liveCode +
+      '</b> · participant' +
+      ' <button class="btn ghost small" data-copylive="1">Copier le lien</button>';
+    share.classList.add('hidden');
+    stop.classList.remove('hidden');
+    stop.textContent = 'Quitter le live';
+  } else {
+    badge.classList.add('hidden');
+    share.classList.remove('hidden');
+    stop.classList.add('hidden');
+    share.disabled = !firebaseReady;
+  }
+  // un participant ne peut pas réinitialiser le tournoi depuis son téléphone
+  if (liveRole === 'viewer') el('btnReset').classList.add('hidden');
+}
+
+function render() {
+  var running = state !== null;
+  el('screenSetup').classList.toggle('hidden', running);
+  el('screenTournament').classList.toggle('hidden', !running);
+  el('btnReset').classList.toggle('hidden', !running);
+  if (!running) { renderSetup(); return; }
+  var isElim = state.config.format === 'elim';
+  el('groupsTitle').classList.toggle('hidden', isElim);
+  renderTables();
+  if (isElim) el('groupsWrap').innerHTML = ''; else renderGroups();
+  renderBracket();
+  renderKoTree();
+  renderLiveUI();
+  renderEndBanner();
+}
+
+// Bannière affichée en haut de l'écran quand la finale est jouée
+function renderEndBanner() {
+  var b = el('endBanner');
+  var fini = finaleDone();
+  b.classList.toggle('hidden', !fini);
+  if (!fini) return;
+  el('endBannerTxt').textContent =
+    playerName(winnerOf(phaseMatches('finale')[0])) + ' remporte le tournoi !';
+}
+
+// Télécharge un objet JSON en fichier (état courant ou archive)
+function downloadJson(obj, filename) {
+  var blob = new Blob([JSON.stringify(obj, null, 1)], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+}
+
+/* ---------- Archives : liste (setup) + consultation ---------- */
+
+function renderArchives() {
+  var archives = loadArchives();
+  el('archivesCard').classList.toggle('hidden', archives.length === 0);
+  var list = el('archivesList');
+  list.innerHTML = '';
+  archives.forEach(function (a) {
+    var d = new Date(a.endedAt);
+    var when = d.toLocaleDateString('fr-FR') + ' ' +
+      d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    var row = document.createElement('div');
+    row.className = 'archive-row';
+    row.innerHTML =
+      '<div class="archive-info"><div style="font-weight:700">' + esc(a.winner || '?') +
+        '</div><div class="archive-meta">' + when + ' · ' + a.players.length + ' joueurs · ' +
+        (a.format === 'elim' ? 'Élimination' : 'Poules') + '</div></div>' +
+      '<div class="archive-btns">' +
+        '<button class="btn ghost small" data-aview="' + a.id + '">Voir</button>' +
+        '<button class="btn ghost small" data-aexport="' + a.id + '">JSON</button>' +
+        '<button class="btn ghost small" data-adel="' + a.id + '">Suppr.</button>' +
+      '</div>';
+    list.appendChild(row);
+  });
+}
+
+var archiveOpen = null; // archive actuellement affichée dans l'overlay
+function viewArchive(id) {
+  var a = loadArchives().find(function (x) { return String(x.id) === id; });
+  if (!a || !a.state) return;
+  archiveOpen = a;
+  var s = a.state;
+  // résolution des noms depuis l'état archivé (pas l'état courant)
+  var pname = function (pid) {
+    var p = s.players.find(function (x) { return x.id === pid; });
+    return p ? p.name : '?';
+  };
+  var d = new Date(a.endedAt);
+  el('archiveTitle').textContent = 'Tournoi du ' + d.toLocaleDateString('fr-FR');
+  el('archiveSub').textContent =
+    (a.format === 'elim' ? 'Élimination + consolante' : 'Poules + phase finale') +
+    ' · ' + s.players.length + ' joueurs';
+  var h = '';
+  if (a.winner) {
+    h += '<div style="text-align:center; margin-bottom:10px">' +
+      '<div style="color:var(--neon); font-size:19px; font-weight:800">' +
+        esc(a.winner) + '</div>' +
+      '<div style="font-size:12px; color:var(--dim)">vainqueur' +
+        (a.runnerUp ? ' · 2e : ' + esc(a.runnerUp) : '') +
+        (a.third ? ' · 3e : ' + esc(a.third) : '') +
+        (a.consoWinner ? ' · consolante : ' + esc(a.consoWinner) : '') +
+      '</div></div>';
+  }
+  var lastTag = null;
+  s.matches.forEach(function (m) {
+    var tag = (PHASE_LABEL[m.phase] || m.phase) + (m.group ? ' ' + m.group : '');
+    if (tag !== lastTag) {
+      h += '<div class="archive-phase">' + esc(tag) + '</div>';
+      lastTag = tag;
+    }
+    var done = m.status === 'done';
+    h += '<div class="match-row done">' +
+      '<span class="pname' + (done && m.s1 > m.s2 ? ' winner' : '') + '">' +
+        esc(pname(m.p1)) + '</span>' +
+      '<span class="score">' + (done ? m.s1 + ' – ' + m.s2 : '—') + '</span>' +
+      '<span class="pname right' + (done && m.s2 > m.s1 ? ' winner' : '') + '">' +
+        esc(pname(m.p2)) + '</span>' +
+      '</div>';
+  });
+  el('archiveBody').innerHTML = h;
+  el('archiveOverlay').classList.add('open');
+}
+
+/* ================= Écran de setup ================= */
+
+function renderSetup() {
+  // race-to par phase selon le format et le nombre de joueurs
+  var rt = el('racetos');
+  var defaults = { poule: 2, quart: 3, demi: 3, finale: 4, main: 4, conso: 2, efinale: 5 };
+  // conserve les valeurs déjà saisies si les phases existaient
+  rt.querySelectorAll('input').forEach(function (inp) {
+    var ph = inp.id.replace('rt_', '');
+    var v = parseInt(inp.value, 10);
+    if (v > 0) defaults[ph] = v;
+  });
+  rt.innerHTML = '';
+  var fields = setupCfg.format === 'poules'
+    ? phasesFor(setupCfg.players).map(function (ph) {
+        return { k: ph, label: PHASE_LABEL[ph] };
+      })
+    : [{ k: 'main', label: 'Tableau (barrages → demis)' },
+       { k: 'conso', label: 'Consolante' },
+       { k: 'efinale', label: 'Finale' }];
+  fields.forEach(function (f) {
+    var d = document.createElement('div');
+    d.className = 'field';
+    d.innerHTML = '<label>' + f.label + '</label>' +
+      '<input type="number" id="rt_' + f.k + '" min="1" max="15" value="' + (defaults[f.k] || 4) + '">';
+    rt.appendChild(d);
+  });
+  el('elimOpts').classList.toggle('hidden', setupCfg.format !== 'elim');
+  el('formatDesc').textContent = setupCfg.format === 'poules'
+    ? poulesDesc(setupCfg.players) : elimDesc(setupCfg.players);
+  // bloc "rejoindre un live" : actif seulement si Firebase est configuré
+  el('btnJoin').disabled = !firebaseReady;
+  el('liveSetupNote').textContent = firebaseReady
+    ? 'Entre le code à 8 caractères affiché sur l\'appareil qui a partagé le live.'
+    : 'Suivi live désactivé — renseigner FIREBASE_CONFIG en haut du script.';
+
+  // champs de noms
+  var grid = el('namesGrid');
+  var oldVals = {};
+  grid.querySelectorAll('input').forEach(function (inp, i) { oldVals[i] = inp.value; });
+  grid.innerHTML = '';
+  for (var i = 0; i < setupCfg.players; i++) {
+    var inp = document.createElement('input');
+    inp.type = 'text';
+    inp.placeholder = 'Joueur ' + (i + 1);
+    inp.setAttribute('list', 'knownNames');
+    if (oldVals[i]) inp.value = oldVals[i];
+    grid.appendChild(inp);
+  }
+  var dl = el('knownNames');
+  dl.innerHTML = '';
+  knownNames().forEach(function (n) {
+    var o = document.createElement('option');
+    o.value = n;
+    dl.appendChild(o);
+  });
+  renderArchives();
+}
+
+/* ================= Événements ================= */
+
+function bindChips(containerId, key) {
+  el(containerId).addEventListener('click', function (e) {
+    var chip = e.target.closest('.chip');
+    if (!chip) return;
+    this.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('on'); });
+    chip.classList.add('on');
+    setupCfg[key] = parseInt(chip.dataset.n, 10);
+    renderSetup();
+  });
+}
+
+bindChips('chipsPlayers', 'players');
+bindChips('chipsTables', 'tables');
+
+el('chipsFormat').addEventListener('click', function (e) {
+  var chip = e.target.closest('.chip');
+  if (!chip) return;
+  this.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('on'); });
+  chip.classList.add('on');
+  setupCfg.format = chip.dataset.f;
+  renderSetup();
+});
+
+el('btnStart').addEventListener('click', startTournament);
+
+el('btnReset').addEventListener('click', function () {
+  if (!confirm('Abandonner le tournoi en cours et repartir à zéro ?')) return;
+  if (liveRef) stopLive(); // hôte → supprime le nœud pour les participants
+  state = null;
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  render();
+});
+
+// Copie le lien live partageable (?live=CODE → rejoint automatiquement).
+// Toujours l'URL publique GitHub Pages : l'appareil qui partage peut avoir
+// ouvert la page en local (fichier/localhost), le lien doit marcher partout.
+var PUBLIC_URL = 'https://ludoo-73.github.io/symbioz-timer-pages/tournoi-blackball.html';
+function copyLiveLink() {
+  var url = PUBLIC_URL + '?live=' + liveCode;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(function () { toast('Lien copié — à partager aux joueurs'); });
+  } else {
+    window.prompt('Copie ce lien :', url);
+  }
+}
+
+// Délégation : lancement/retrait de match, saisie score, contrôles du chrono,
+// correction d'un match terminé — tous les participants peuvent agir
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-score]');
+  if (b) { openScoreModal(b.dataset.score); return; }
+  var bc = e.target.closest('[data-copylive]');
+  if (bc) { copyLiveLink(); return; }
+  var bl = e.target.closest('[data-launch]');
+  if (bl) { launchMatch(bl.dataset.launch); return; }
+  var bu = e.target.closest('[data-unlaunch]');
+  if (bu) { unlaunchMatch(bu.dataset.unlaunch); return; }
+  var bp = e.target.closest('[data-pause]');
+  if (bp) {
+    var mp = state.matches.find(function (x) { return x.id === bp.dataset.pause; });
+    if (mp) { toggleMatchTimer(mp); saveState(); renderTables(); tickTimers(); }
+    return;
+  }
+  var b5 = e.target.closest('[data-plus5]');
+  if (b5) {
+    var m5 = state.matches.find(function (x) { return x.id === b5.dataset.plus5; });
+    if (m5) { addMatchTime(m5, 5 * 60000); saveState(); renderTables(); tickTimers(); }
+    return;
+  }
+  var bm5 = e.target.closest('[data-minus5]');
+  if (bm5) {
+    var mm5 = state.matches.find(function (x) { return x.id === bm5.dataset.minus5; });
+    if (mm5) { addMatchTime(mm5, -5 * 60000); saveState(); renderTables(); tickTimers(); }
+    return;
+  }
+  var row = e.target.closest('.match-row.clickable');
+  if (row) openScoreModal(row.dataset.match);
+});
+
+// Délégation pour les archives : voir, exporter, supprimer
+document.addEventListener('click', function (e) {
+  var av = e.target.closest('[data-aview]');
+  if (av) { viewArchive(av.dataset.aview); return; }
+  var ae = e.target.closest('[data-aexport]');
+  if (ae) {
+    var arc = loadArchives().find(function (x) { return String(x.id) === ae.dataset.aexport; });
+    if (arc) downloadJson(arc.state, 'tournoi-blackball-archive.json');
+    return;
+  }
+  var ad = e.target.closest('[data-adel]');
+  if (ad) {
+    if (confirm('Supprimer cette archive ?')) {
+      saveArchives(loadArchives().filter(function (x) { return String(x.id) !== ad.dataset.adel; }));
+      renderArchives();
+    }
+    return;
+  }
+});
+
+el('btnCloture').addEventListener('click', cloturerTournoi);
+el('archClose').addEventListener('click', function () {
+  el('archiveOverlay').classList.remove('open');
+  archiveOpen = null;
+});
+el('archExport').addEventListener('click', function () {
+  if (archiveOpen) downloadJson(archiveOpen.state, 'tournoi-blackball-archive.json');
+});
+
+el('scPlus1').addEventListener('click', function () { scoreBtn(1, 1); });
+el('scMinus1').addEventListener('click', function () { scoreBtn(-1, 1); });
+el('scPlus2').addEventListener('click', function () { scoreBtn(1, 2); });
+el('scMinus2').addEventListener('click', function () { scoreBtn(-1, 2); });
+el('scCancel').addEventListener('click', function () {
+  el('scoreOverlay').classList.remove('open');
+});
+el('scConfirm').addEventListener('click', confirmScore);
+
+/* ---------- Export / import (tournoi sur plusieurs soirées ou appareils) ---------- */
+
+el('btnExport').addEventListener('click', function () {
+  if (state) downloadJson(state, 'tournoi-blackball.json');
+});
+
+el('btnImport').addEventListener('click', function () {
+  el('importFile').click();
+});
+
+el('btnShare').addEventListener('click', startHosting);
+el('btnStopLive').addEventListener('click', stopLive);
+el('btnJoin').addEventListener('click', function () {
+  joinViewer(el('joinCode').value);
+});
+
+el('importFile').addEventListener('change', function () {
+  var f = this.files && this.files[0];
+  if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function () {
+    if (liveRef) stopLive(); // l'import remplace l'état — on détache du live
+    try {
+      var s = JSON.parse(rd.result);
+      if (!s || !s.players || !s.matches || !s.config) throw new Error('format');
+      state = s;
+      if (state.nextId === undefined) state.nextId = state.matches.length;
+      // réaligne les tables avec les matchs en cours, chronos en pause
+      state.tables.forEach(function (t) { t.matchId = null; });
+      state.matches.forEach(function (m) {
+        if (m.status === 'playing' && m.table >= 0 && state.tables[m.table])
+          state.tables[m.table].matchId = m.id;
+      });
+      pauseStaleTimers(0); // tout chrono importé repart en pause
+      saveState();
+      render();
+      toast('Tournoi importé');
+    } catch (e) {
+      toast('Fichier invalide — import annulé');
+    }
+  };
+  rd.readAsText(f);
+  this.value = '';
+});
+
+/* ================= Init ================= */
+
+state = loadState();
+// garde-fou : un état corrompu ou ancien format → retour au setup
+if (state && (!state.players || !state.matches || !state.tables)) state = null;
+if (state && state.nextId === undefined) state.nextId = state.matches.length;
+// session live persistée : l'hôte reprend son partage, le participant se rabonne
+var liveMeta = loadLiveMeta();
+if (liveMeta && firebaseReady) {
+  liveRole = liveMeta.role;
+  liveCode = liveMeta.code;
+  liveRef = firebase.database().ref('tournois/' + liveCode);
+  bindViewerListener(); // tout le monde écoute — hôte comme participants
+}
+// Lien partagé ?live=CODE → rejoint le tournoi directement. Si l'appareil a
+// déjà une session live d'un AUTRE code, le lien cliqué l'emporte.
+var qsLive = null;
+try { qsLive = new URLSearchParams(location.search).get('live'); } catch (e) {}
+if (qsLive) qsLive = String(qsLive).trim().toUpperCase();
+if (qsLive && firebaseReady && (!liveMeta || liveMeta.code !== qsLive)) joinViewer(qsLive);
+// reprise d'un tournoi après une longue fermeture → chronos en pause
+if (state && pauseStaleTimers(2 * 3600 * 1000)) {
+  saveState();
+  setTimeout(function () { toast('Chronos des matchs en cours remis en pause'); }, 600);
+}
+render();
+
+</script>
+</body>
+</html>
