@@ -18,6 +18,14 @@ Un build peut rester coincé en `building` : le relancer via
 `gh api -X POST /repos/Ludoo-73/symbioz-timer-pages/pages/builds`.
 URL live : `https://ludoo-73.github.io/symbioz-timer-pages/tournoi-blackball.html`.
 
+**Repo voisins** : `Ludoo-73/nantes-bg1-dispo` (public) héberge les pages
+Dispo/Tournois de l'équipe ; `Ludoo-73/symbioz-timer` (privé) = source de
+l'app (branche `android-app`) — sa branche `main` était un miroir de ce site,
+**dépubliée depuis la privatisation** : les anciens liens
+`ludoo-73.github.io/symbioz-timer/…` → 404, ne plus les diffuser.
+`tournoi-blackball.html` existe dans les deux repos, identique sauf
+`PUBLIC_URL` — **la copie canonique est celle-ci**.
+
 ## Tournoi Blackball — Firebase (suivi live)
 
 - Projet Firebase : `symbioz-tournois` (ID `symbioz-tournois-bdfe7`), compte Google thiveb@gmail.com.
